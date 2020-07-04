@@ -1,19 +1,31 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import Pagination from "./Pagination";
 
 class Pokemons extends Component {
-  state = {
-    posts: [],
-    errorMessage: " ",
-  };
-  componentDidMount() {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      posts: [],
+      errorMessage: " ",
+      currentPage: "https://pokeapi.co/api/v2/pokemon",
+      nextPage: "",
+      prevPage: "",
+    };
+  }
+
+  componentDidMount(prevState) {
     axios
-      .get("https://pokeapi.co/api/v2/pokemon")
+      .get(this.state.currentPage)
       .then((result) => {
         console.log(result);
         this.setState({
           posts: result.data.results,
+
+          nextPage: result.data.next,
+          prevPage: result.data.previous,
         });
       })
       .catch((error) => {
@@ -25,8 +37,31 @@ class Pokemons extends Component {
   componentDidUpdate() {
     console.log(this.state);
   }
+  goToNextPage = () => {
+    axios.get(this.state.nextPage).then((result) => {
+      console.log(result);
+      this.setState({
+        posts: result.data.results,
+
+        nextPage: result.data.next,
+        prevPage: result.data.previous,
+      });
+    });
+  };
+  goToPrevPage = () => {
+    axios.get(this.state.prevPage).then((result) => {
+      console.log(result);
+      this.setState({
+        posts: result.data.results,
+
+        nextPage: result.data.next,
+        prevPage: result.data.previous,
+      });
+    });
+  };
   render() {
     const { posts, errorMessage } = this.state;
+
     const postList = posts.length ? (
       posts.map((post) => {
         return (
@@ -35,8 +70,6 @@ class Pokemons extends Component {
               <Link to={"/" + post.name}>
                 <h5>{post.name}</h5>
               </Link>
-
-              <p>{post.body}</p>
             </div>
           </div>
         );
@@ -47,6 +80,10 @@ class Pokemons extends Component {
     return (
       <div className="center">
         <h1>List of Pokémons</h1>
+        <Pagination
+          goToNextPage={this.goToNextPage}
+          goToPrevPage={this.goToPrevPage}
+        />
         {postList}
         {errorMessage}
       </div>
